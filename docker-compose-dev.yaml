@@ -1,9 +1,11 @@
 services:
-  backend:
+  backend_dev:
     build: 
       context: backend/
       target: development
     container_name: backend_dev
+    depends_on:
+      - db_dev
     ports:
       - "${BACKEND_PORT}:3000"
     networks:
@@ -11,19 +13,26 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_HOST=db_dev
     volumes:
       - ./backend:/home/node
       - /home/node/node_modules
  
-  db:
+  db_dev:
     image: postgres:18
     container_name: db_dev
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_DATABASE}
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql
     networks:
       - backend_dev
 
