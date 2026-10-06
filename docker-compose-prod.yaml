@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: 
+      context: backend/
+      target: production
+    container_name: backend
+    ports:
+      - "${BACKEND_PORT}:3000"
+    networks:
+      - backend
+  
+  db:
+    image: postgres:18
+    container_name: db
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql_dev/data
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
+    driver: bridge
