@@ -1,0 +1,10 @@
+images/
+build/
+vendor/
+ndk/
+apk_build/
+emulator/
+
+*.apk
+*.idsig
+*.jks
