@@ -10,10 +10,6 @@
 
 
 
-## Installation
-
-
-
 ## Architecture
 ### Backend
 Backend on nestjs with postgresql database.  
@@ -23,19 +19,25 @@ Connection via TLS.
 Docker and docker compose for containers.
 backend/cert with https certificates.
 
+
+
 ### Mobile App
 C++ with openssl and [Boost.Asio](https://github.com/boostorg/beast)  
 UI with OpenGL ES and [idk here ui lib]()
 Packages via vcpkg  
 
-### Setup qemu
-Android image - `wget "https://sourceforge.net/projects/android-x86/files/Release%209.0/android-x86_64-9.0-r2.iso/download" -O emulator/images/android-x86.iso` 
+#### Installation and Usage
+##### Android Image
+```bash
+wget "https://sourceforge.net/projects/android-x86/files/Release%209.0/android-x86_64-9.0-r2.iso/download" -O emulator/images/android-x86.iso
+``` 
 
-#### Create Disk
+##### Create Disk
 ```bash
 qemu-img create -f qcow2 emulator/android_disk.qcow2 20G
 ```
-#### Run qemu and install android
+
+##### Run qemu and install android
 ```bash
 qemu-system-x86_64 \
   -enable-kvm \
@@ -50,7 +52,8 @@ qemu-system-x86_64 \
   -usb -device usb-tablet \
   -display gtk
 ```
-#### Run android from disk
+
+##### Run android from disk
 ```bash
 qemu-system-x86_64 \
   -enable-kvm \
@@ -64,8 +67,8 @@ qemu-system-x86_64 \
   -display gtk
 ```
 
-### Compile Apk and Run
-#### Install Dependencies
+#### Compile Apk and Run
+##### Install Dependencies
 ```bash
 sudo apt update && sudo apt install -y cmake ninja-build zip aapt zipalign apksigner adb android-framework-res
 wget https://dl.google.com/android/repository/android-ndk-r26b-linux.zip -O ndk.zip
@@ -74,7 +77,7 @@ rm ndk.zip
 export ANDROID_JAR="/usr/share/android-framework-res/framework-res.apk"
 ```
 
-#### Compile
+##### Compile
 ```bash
 cmake -B build -G Ninja \
   -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" \
@@ -94,7 +97,7 @@ keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks
 apksigner sign --ks mykey.jks --ks-pass pass:haslo123 app-aligned.apk
 ```
 
-#### Install apk and run on qemu
+##### Install apk and run on qemu
 ```bash
 adb connect 127.0.0.1:5555
 adb -s 127.0.0.1:5555 install -r app-aligned.apk
