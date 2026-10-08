@@ -5,6 +5,6 @@ ndk/
 apk_build/
 emulator/
 
-*.apk
-*.idsig
-*.jks
+**/*.apk
+**/*.idsig
+**/*.jks

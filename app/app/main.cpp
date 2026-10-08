@@ -1,11 +1,9 @@
-#include "App.h"
+#include "Core.h"
 #include <android_native_app_glue.h>
 
 
 
 void android_main(struct android_app* state) {
-  app_dummy();
-
   MA::App app(state);
   state->userData = &app;
   state->onAppCmd = MA::App::HandleCmd;
@@ -23,8 +21,8 @@ void android_main(struct android_app* state) {
         return;
       };
     };
+    
     if (app.IsInitialized()) app.onRender();
   };
 };
-
 

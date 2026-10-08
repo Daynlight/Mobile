@@ -84,22 +84,23 @@ export ANDROID_JAR="/usr/share/android-framework-res/framework-res.apk"
 
 ##### Compile
 ```bash
-cmake -B build -G Ninja \
-  -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" \
-  -DANDROID_ABI="x86_64" \
-  -DANDROID_PLATFORM="android-29"
-cmake --build build
+cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" -DANDROID_ABI="x86_64" -DANDROID_PLATFORM="android-29" && cmake --build build
 
 rm -rf apk_build/
 mkdir -p apk_build/lib/x86_64
 cp build/app/libmain.so apk_build/lib/x86_64/
 cp build/app/libapp_so.so apk_build/lib/x86_64/
+
 rm -f app-unaligned.apk app-aligned.apk
-aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk apk_build/
-cd apk_build && zip -r ../app-unaligned.apk lib/ && cd ..
-zipalign -f -v 4 app-unaligned.apk app-aligned.apk
-keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks -storepass haslo123 -keypass haslo123 -alias mykey -keyalg RSA 2>/dev/null || true
-apksigner sign --ks mykey.jks --ks-pass pass:haslo123 app-aligned.apk
+aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk
+cd apk_build
+zip -r ../app-unaligned.apk lib/
+cd ..
+zipalign -v -f 4 app-unaligned.apk app-aligned.apk
+if [ ! -f "mykey.jks" ]; then
+  keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks -storepass haslo123 -keypass haslo123 -alias mykey -keyalg RSA
+fi
+apksigner sign --ks mykey.jks --ks-pass pass:haslo123 --key-pass pass:haslo123 --min-sdk-version 21 app-aligned.apk
 ```
 
 ##### Install apk and run on qemu
@@ -112,22 +113,23 @@ adb -s 127.0.0.1:5555 logcat -s MA_APP
 
 ##### All in one
 ```bash
-cmake -B build -G Ninja \
-  -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" \
-  -DANDROID_ABI="x86_64" \
-  -DANDROID_PLATFORM="android-29"
-cmake --build build
+cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" -DANDROID_ABI="x86_64" -DANDROID_PLATFORM="android-29" && cmake --build build
 
 rm -rf apk_build/
 mkdir -p apk_build/lib/x86_64
 cp build/app/libmain.so apk_build/lib/x86_64/
 cp build/app/libapp_so.so apk_build/lib/x86_64/
+
 rm -f app-unaligned.apk app-aligned.apk
-aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk apk_build/
-cd apk_build && zip -r ../app-unaligned.apk lib/ && cd ..
-zipalign -f -v 4 app-unaligned.apk app-aligned.apk
-keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks -storepass haslo123 -keypass haslo123 -alias mykey -keyalg RSA 2>/dev/null || true
-apksigner sign --ks mykey.jks --ks-pass pass:haslo123 app-aligned.apk
+aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk
+cd apk_build
+zip -r ../app-unaligned.apk lib/
+cd ..
+zipalign -v -f 4 app-unaligned.apk app-aligned.apk
+if [ ! -f "mykey.jks" ]; then
+  keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks -storepass haslo123 -keypass haslo123 -alias mykey -keyalg RSA
+fi
+apksigner sign --ks mykey.jks --ks-pass pass:haslo123 --key-pass pass:haslo123 --min-sdk-version 21 app-aligned.apk
 
 adb connect 127.0.0.1:5555
 adb -s 127.0.0.1:5555 install -r app-aligned.apk
