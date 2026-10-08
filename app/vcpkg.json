@@ -7,7 +7,10 @@
       "name": "imgui",
       "features": ["android-binding", "opengl3-binding"]
     },
-    "cpp-httplib"
+    {
+      "name": "cpp-httplib",
+      "features": ["openssl"]
+    }
   ]
 }
 

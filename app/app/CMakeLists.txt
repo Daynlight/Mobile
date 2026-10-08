@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.18)
 ## =========
 find_package(imgui CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 ## =========
 ## Core
@@ -31,6 +32,8 @@ target_link_libraries(Core PRIVATE
   log
   EGL
   GLESv3
+  OpenSSL::SSL
+  OpenSSL::Crypto
 )
 
 ## =========
@@ -47,4 +50,4 @@ target_link_libraries(main PRIVATE
   native_app_glue
   log
 )
-
+target_link_options(main PRIVATE -Wl,-u,ANativeActivity_onCreate)
