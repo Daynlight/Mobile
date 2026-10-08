@@ -68,6 +68,11 @@ qemu-system-x86_64 \
 ```
 
 #### Compile Apk and Run
+##### Vcpkg
+```bash
+vcpkg install --triplet=x64-android --x-install-root=./vendor
+```
+
 ##### Install Dependencies
 ```bash
 sudo apt update && sudo apt install -y cmake ninja-build zip aapt zipalign apksigner adb android-framework-res
@@ -105,4 +110,27 @@ adb -s 127.0.0.1:5555 shell am start -n com.ma.app/android.app.NativeActivity
 adb -s 127.0.0.1:5555 logcat -s MA_APP
 ```
 
+##### All in one
+```bash
+cmake -B build -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" \
+  -DANDROID_ABI="x86_64" \
+  -DANDROID_PLATFORM="android-29"
+cmake --build build
 
+rm -rf apk_build/
+mkdir -p apk_build/lib/x86_64
+cp build/app/libmain.so apk_build/lib/x86_64/
+cp build/app/libapp_so.so apk_build/lib/x86_64/
+rm -f app-unaligned.apk app-aligned.apk
+aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk apk_build/
+cd apk_build && zip -r ../app-unaligned.apk lib/ && cd ..
+zipalign -f -v 4 app-unaligned.apk app-aligned.apk
+keytool -genkeypair -validity 10000 -dname "CN=MA,O=MA,C=PL" -keystore mykey.jks -storepass haslo123 -keypass haslo123 -alias mykey -keyalg RSA 2>/dev/null || true
+apksigner sign --ks mykey.jks --ks-pass pass:haslo123 app-aligned.apk
+
+adb connect 127.0.0.1:5555
+adb -s 127.0.0.1:5555 install -r app-aligned.apk
+adb -s 127.0.0.1:5555 shell am start -n com.ma.app/android.app.NativeActivity
+adb -s 127.0.0.1:5555 logcat -s MA_APP
+```

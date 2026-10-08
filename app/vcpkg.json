@@ -2,7 +2,12 @@
   "name": "mobile",
   "version": "1.0.0",
   "dependencies": [
-    "gtest"
+    "gtest",
+    {
+      "name": "imgui",
+      "features": ["android-binding", "opengl3-binding"]
+    },
+    "cpp-httplib"
   ]
 }
 
