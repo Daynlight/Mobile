@@ -80,6 +80,7 @@ wget https://dl.google.com/android/repository/android-ndk-r26b-linux.zip -O ndk.
 unzip -q ndk.zip -d ndk/
 rm ndk.zip
 export ANDROID_JAR="/usr/share/android-framework-res/framework-res.apk"
+export ANDROID_NDK_HOME=${PWD}/ndk/android-ndk-r26b/
 ```
 
 ##### Compile

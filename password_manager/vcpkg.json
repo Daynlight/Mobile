@@ -1,0 +1,14 @@
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "dependencies": [
+    "gtest",
+    "sqlite3",
+    "openssl",
+    {
+      "name": "imgui",
+      "features": ["android-binding", "opengl3-binding"]
+    }
+  ]
+}
+
