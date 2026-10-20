@@ -1,5 +1,11 @@
-#pragma once
+// Password Manager
+// Copyright 2026 Daynlight
+// Licensed under the GNU General, Version 3.0.
+// See LICENSE file for details.
 
+
+
+#pragma once
 #include <cstdio>
 #include <string>
 #include <atomic>
@@ -15,19 +21,19 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 
-#include "Database.h"
-
-#define LOG_TAG "MA_APP"
+#define LOG_TAG "Password_Manager"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+#include "Database.h"
 
 
 
 namespace MA {
 class Core {
-// ==========================
-// === Data =================
-// ==========================
+// ==============================================
+// === Data =====================================
+// ==============================================
 private:
   android_app* m_app = nullptr;
     
@@ -47,10 +53,12 @@ private:
   char buffer[4096] = {};
   float padding = 40.0f;
 
-// ==========================
-// === Functions ============
-// ==========================
-// === Constructors
+// ==============================================
+// === Functions ================================
+// ==============================================
+// ==================== //
+// === Constructors === //
+// ==================== //
 public:
   Core(android_app* app);
   ~Core();
@@ -59,29 +67,44 @@ public:
   Core(Core&& second) = delete;
   Core& operator=(Core&& second) = delete;
 
-// === Core Events
+// ==================== //
+// === Core Events ==== //
+// ==================== //
 public:
   void onStart();
   void onRender();
   void onEnd();
 
-// === Getters/Setters
+// ==================== //
+// === Getters/Setters  //
+// ==================== //
   bool IsInitialized() const;
 
-// === Render
+// ==================== //
+// === Render ========= //
+// ==================== //
 private:
   void RenderUI();
   void RenderScene();
-  void RenderGetPassword();
   void RenderLogin();
+  void RenderAddLogin();
+  void RenderRemoveLogin();
+  void RenderGetPassword();
   void RenderAddPassword();
   void RenderRemovePassword();
 
-// === Handlers
-public:
+// ==================== //
+// === Helpers ======== //
+// ==================== //
+private:
   bool CenteredButton(const char* label, float width_ratio = 0.8f, float height = 50.0f);
   void CenteredText(const std::string& text);
   bool CenteredTextInput(const char* label, std::string& data, float width_ratio = 0.8f);
+
+// ==================== //
+// === Hendlers ======= //
+// ==================== //
+public:
   static void HandleCmd(struct android_app* app, int32_t cmd);
   static int32_t HandleInput(struct android_app* app, AInputEvent* event);
   void ToggleAndroidKeyboard(android_app* app, bool show);

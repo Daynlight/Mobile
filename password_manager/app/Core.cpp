@@ -1,7 +1,15 @@
+// Password Manager
+// Copyright 2026 Daynlight
+// Licensed under the GNU General, Version 3.0.
+// See LICENSE file for details.
+
+
+
 #include "Core.h"
 #include "imgui.h"
 #include "imgui_impl_android.h"
 #include "imgui_impl_opengl3.h"
+
 #ifndef CPPHTTPLIB_OPENSSL_SUPPORT
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #endif
@@ -12,16 +20,24 @@ extern IMGUI_IMPL_API int32_t ImGui_ImplAndroid_HandleInputEvent(const AInputEve
 
 
 
+// ==================== //
+// === Constructors === //
+// ==================== //
 MA::Core::Core(android_app* app) : m_app(app) {
   LOGI("MA::Core Constructor Called");
 };
+
+
 
 MA::Core::~Core() {
   onEnd();
 };
 
 
-// === Core Events
+
+// ==================== //
+// === Core Events ==== //
+// ==================== //
 void MA::Core::onStart() {
   if (m_initialized) return;
   LOGI("Inicjalizacja EGL i OpenGL ES");
@@ -80,6 +96,8 @@ void MA::Core::onStart() {
   m_initialized = true;
 };
 
+
+
 void MA::Core::onRender() {
   if (!m_initialized) return;
 
@@ -106,6 +124,8 @@ void MA::Core::onRender() {
   eglSwapBuffers(m_eglDisplay, m_eglSurface);
 };
 
+
+
 void MA::Core::onEnd() {
   if (!m_initialized) return;
 
@@ -129,13 +149,19 @@ void MA::Core::onEnd() {
 };
 
 
-// === Getters/Setters
+
+// ==================== //
+// === Getters/Setters  //
+// ==================== //
 bool MA::Core::IsInitialized() const { 
   return m_initialized; 
 };
 
 
-// === Render
+
+// ==================== //
+// === Render ========= //
+// ==================== //
 void MA::Core::RenderUI() {
   auto& io = ImGui::GetIO();
     
@@ -155,14 +181,18 @@ void MA::Core::RenderUI() {
     
   ImGui::PopStyleVar();
   
-  if(scene == 4) RenderLogin();
-  else if(scene == 0) RenderScene();
+  if(scene == 0) RenderScene();
   else if(scene == 1) RenderGetPassword();
   else if(scene == 2) RenderAddPassword();
   else if(scene == 3) RenderRemovePassword();
+  else if(scene == 4) RenderLogin();
+  else if(scene == 5) RenderAddLogin();
+  else if(scene == 6) RenderRemoveLogin();
 
   ImGui::End();
 };
+
+
 
 void MA::Core::RenderScene() {
   password = "";
@@ -176,24 +206,30 @@ void MA::Core::RenderScene() {
     
   float btnHeight = 50.0f;
   float spacing = 20.0f;
-  float totalHeight = (btnHeight * 3) + (spacing * 2);
+  float totalHeight = (btnHeight * 6) + (spacing * 5);
     
   ImGui::SetCursorPosY((windowHeight - totalHeight) * 0.5f);
 
+  if (CenteredButton("Exit", 0.8f, btnHeight)) { scene = 4; return; };
+  ImGui::Dummy(ImVec2(0, spacing));
   if (CenteredButton("Get Password", 0.8f, btnHeight)) { scene = 1; return; };
   ImGui::Dummy(ImVec2(0, spacing));
   if (CenteredButton("Add Password", 0.8f, btnHeight)) { scene = 2; return; };
   ImGui::Dummy(ImVec2(0, spacing)); 
   if (CenteredButton("Remove Password", 0.8f, btnHeight)) { scene = 3; return; };
+  ImGui::Dummy(ImVec2(0, spacing)); 
+  if (CenteredButton("Add Login", 0.8f, btnHeight)) { scene = 5; return; };
+  ImGui::Dummy(ImVec2(0, spacing)); 
+  if (CenteredButton("Remove Login", 0.8f, btnHeight)) { scene = 6; return; };
 };
 
+
+
 void MA::Core::RenderLogin() {
-  password = "";
   db_password = "";
   name = "";
   add_state = -1;
   remove_state = -1;
-  memset(buffer, 0, sizeof(buffer));
 
   float windowHeight = ImGui::GetWindowHeight() - padding;
     
@@ -205,8 +241,84 @@ void MA::Core::RenderLogin() {
 
   CenteredTextInput("Password", password);
   ImGui::Dummy(ImVec2(0, spacing)); 
-  if (CenteredButton("Login", 0.8f, btnHeight)) { scene = 0; return; };
+  if (CenteredButton("Login", 0.8f, btnHeight)) { 
+    bool access = database.loginToPasswordManager(password);
+    if(access) scene = 0;
+    return; 
+  };
 };
+
+
+
+void MA::Core::RenderAddLogin(){
+  name = "";
+  remove_state = -1;
+
+  float windowHeight = ImGui::GetWindowHeight() - padding;
+  
+  float btnHeight = 50.0f;
+  float spacing = 20.0f;
+  float totalHeight = (btnHeight * 4) + (spacing * 3);
+  if(add_state != -1) totalHeight += btnHeight + spacing;
+    
+  ImGui::SetCursorPosY((windowHeight - totalHeight) * 0.5f);
+
+  if (CenteredButton("Back", 0.8f, btnHeight)) { scene = 0; return; };
+  ImGui::Dummy(ImVec2(0, spacing));
+  CenteredTextInput("Access Password", db_password);
+  ImGui::Dummy(ImVec2(0, spacing));
+  CenteredTextInput("New Password", password);
+  ImGui::Dummy(ImVec2(0, spacing));
+  if (CenteredButton("Add Access Password", 0.8f, btnHeight)) {
+    add_state = database.addDatabaseAccessPassword(db_password, password);
+  };
+
+  if(add_state == 0){
+    ImGui::Dummy(ImVec2(0, spacing));
+    CenteredText("Access Password Saved");
+  }
+  else if(add_state != 0){
+    ImGui::Dummy(ImVec2(0, spacing));
+    CenteredText("Add Acess Password Failed");
+  }
+};
+
+
+
+void MA::Core::RenderRemoveLogin(){
+  name = "";
+  remove_state = -1;
+
+  float windowHeight = ImGui::GetWindowHeight() - padding;
+  
+  float btnHeight = 50.0f;
+  float spacing = 20.0f;
+  float totalHeight = (btnHeight * 4) + (spacing * 3);
+  if(add_state != -1) totalHeight += btnHeight + spacing;
+    
+  ImGui::SetCursorPosY((windowHeight - totalHeight) * 0.5f);
+
+  if (CenteredButton("Back", 0.8f, btnHeight)) { scene = 0; return; };
+  ImGui::Dummy(ImVec2(0, spacing));
+  CenteredTextInput("Access Password", db_password);
+  ImGui::Dummy(ImVec2(0, spacing));
+  CenteredTextInput("Password To Remove", password);
+  ImGui::Dummy(ImVec2(0, spacing));
+  if (CenteredButton("Remove Access Password", 0.8f, btnHeight)) {
+    add_state = database.removeDatabaseAccessPassword(db_password, password);
+  };
+
+  if(add_state == 0){
+    ImGui::Dummy(ImVec2(0, spacing));
+    CenteredText("Access Password Removed");
+  }
+  else if(add_state != 0){
+    ImGui::Dummy(ImVec2(0, spacing));
+    CenteredText("Remove Acess Password Failed");
+  }
+};
+
+
 
 void MA::Core::RenderGetPassword(){
   float windowHeight = ImGui::GetWindowHeight() - padding;
@@ -230,6 +342,8 @@ void MA::Core::RenderGetPassword(){
     CenteredText(password);
   };
 };
+
+
 
 void MA::Core::RenderAddPassword(){
   float windowHeight = ImGui::GetWindowHeight() - padding;
@@ -265,6 +379,8 @@ void MA::Core::RenderAddPassword(){
   };
 };
 
+
+
 void MA::Core::RenderRemovePassword(){
   float windowHeight = ImGui::GetWindowHeight() - padding;
   
@@ -299,7 +415,10 @@ void MA::Core::RenderRemovePassword(){
 };
 
 
-// === Handlers
+
+// ==================== //
+// === Helpers ======== //
+// ==================== //
 bool MA::Core::CenteredButton(const char* label, float width_ratio, float height) {
   float windowWidth = ImGui::GetWindowWidth() - padding;
   float btnWidth = windowWidth * width_ratio;
@@ -307,12 +426,16 @@ bool MA::Core::CenteredButton(const char* label, float width_ratio, float height
   return ImGui::Button(label, ImVec2(btnWidth, height));
 };
 
+
+
 void MA::Core::CenteredText(const std::string& text) {
   float windowWidth = ImGui::GetWindowWidth() - padding;
   float textWidth = ImGui::CalcTextSize(text.c_str()).x;
   ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
   ImGui::Text("%s", text.c_str());
 };
+
+
 
 bool MA::Core::CenteredTextInput(const char* label, std::string& data, float width_ratio) {
   float windowWidth = ImGui::GetWindowWidth() - padding;
@@ -335,6 +458,11 @@ bool MA::Core::CenteredTextInput(const char* label, std::string& data, float wid
   return false;
 };
 
+
+
+// ==================== //
+// === Hendlers ======= //
+// ==================== //
 void MA::Core::HandleCmd(struct android_app* app, int32_t cmd) {
   Core* engine = (Core*)app->userData;
   
@@ -348,6 +476,8 @@ void MA::Core::HandleCmd(struct android_app* app, int32_t cmd) {
   };
 };
 
+
+
 int32_t MA::Core::HandleInput(struct android_app* app, AInputEvent* event) {
   int32_t eventType = AInputEvent_getType(event);
 
@@ -357,13 +487,8 @@ int32_t MA::Core::HandleInput(struct android_app* app, AInputEvent* event) {
 
     if (action == AKEY_EVENT_ACTION_DOWN) {
       if (keyCode == AKEYCODE_BACK) return 0;
-
-      if (keyCode == AKEYCODE_DEL) {
-        ImGui::GetIO().AddKeyEvent(ImGuiKey_Backspace, true);
-      }
-      else if (keyCode == AKEYCODE_ENTER) {
-        ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, true);
-      }
+      if (keyCode == AKEYCODE_DEL) ImGui::GetIO().AddKeyEvent(ImGuiKey_Backspace, true);
+      else if (keyCode == AKEYCODE_ENTER) ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, true);
       
       JNIEnv* env = nullptr;
       app->activity->vm->AttachCurrentThread(&env, nullptr);
@@ -375,25 +500,21 @@ int32_t MA::Core::HandleInput(struct android_app* app, AInputEvent* event) {
       jobject keyEventObj = env->NewObject(keyEventClass, keyEventCons, action, keyCode);
       jint unicodeKey = env->CallIntMethod(keyEventObj, getUnicodeChar, AKeyEvent_getMetaState(event));
 
-      if (unicodeKey > 0) {
-        ImGui::GetIO().AddInputCharacter((unsigned int)unicodeKey);
-      }
+      if (unicodeKey > 0) ImGui::GetIO().AddInputCharacter((unsigned int)unicodeKey);
 
       env->DeleteLocalRef(keyEventObj);
       env->DeleteLocalRef(keyEventClass);
       app->activity->vm->DetachCurrentThread();
     } 
     else if (action == AKEY_EVENT_ACTION_UP) {
-      if (keyCode == AKEYCODE_DEL) {
-        ImGui::GetIO().AddKeyEvent(ImGuiKey_Backspace, false);
-      } else if (keyCode == AKEYCODE_ENTER) {
-        ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, false);
-      }
-    }
-  }
+      if (keyCode == AKEYCODE_DEL) ImGui::GetIO().AddKeyEvent(ImGuiKey_Backspace, false);
+      else if (keyCode == AKEYCODE_ENTER) ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, false);
+    };
+  };
 
   return ImGui_ImplAndroid_HandleInputEvent(event);
 };
+
 
 
 void MA::Core::ToggleAndroidKeyboard(android_app* app, bool show) {
@@ -434,7 +555,7 @@ void MA::Core::ToggleAndroidKeyboard(android_app* app, bool show) {
     env->DeleteLocalRef(decorView);
     env->DeleteLocalRef(windowClass);
     env->DeleteLocalRef(window);
-  }
+  };
 
   env->DeleteLocalRef(imClass);
   env->DeleteLocalRef(imManager);
@@ -442,4 +563,5 @@ void MA::Core::ToggleAndroidKeyboard(android_app* app, bool show) {
   env->DeleteLocalRef(activityClass);
 
   app->activity->vm->DetachCurrentThread();
-}
+};
+
