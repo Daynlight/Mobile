@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p emulator/images/
+
 wget "https://sourceforge.net/projects/android-x86/files/Release%209.0/android-x86_64-9.0-r2.iso/download" -O emulator/images/android-x86.iso
 qemu-img create -f qcow2 emulator/android_disk.qcow2 20G
 

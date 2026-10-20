@@ -218,7 +218,7 @@ void MA::App::RenderLogin() {
 void MA::App::SendApiRequest(const std::string& endpoint, const std::string& postData) {
   std::string responseText;
     
-  httplib::SSLClient cli("10.0.2.2", 3000);
+  httplib::SSLClient cli("localhost", 3000);
   cli.set_connection_timeout(5, 0); 
   cli.set_read_timeout(5, 0);
 

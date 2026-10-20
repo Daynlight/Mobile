@@ -3,6 +3,8 @@
 export ANDROID_JAR="/usr/share/android-framework-res/framework-res.apk"
 export ANDROID_NDK_HOME=${PWD}/ndk/android-ndk-r26b/
 
+vcpkg install --triplet=x64-android --x-install-root=./vendor
+
 cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" -DANDROID_ABI="x86_64" -DANDROID_PLATFORM="android-29" && cmake --build build
 
 rm -rf apk/apk_build/

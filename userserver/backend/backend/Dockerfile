@@ -14,6 +14,7 @@ CMD ["npm", "run", "start:dev"]
 # --- Production
 FROM base AS builder
 ENV NODE_ENV=production
+CMD ["npm", "install"]
 COPY --chown=node:node . .
 RUN npm run build && npm prune --omit=dev
 
