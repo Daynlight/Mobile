@@ -1,15 +1,19 @@
 #!/bin/bash
 
+export ANDROID_JAR="/usr/share/android-framework-res/framework-res.apk"
+export ANDROID_NDK_HOME=${PWD}/ndk/android-ndk-r26b/
+
+vcpkg install --triplet=x64-android --x-install-root=./vendor
+
 cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="ndk/android-ndk-r26b/build/cmake/android.toolchain.cmake" -DANDROID_ABI="x86_64" -DANDROID_PLATFORM="android-29" && cmake --build build
 
-rm -rf apk_build/
-mkdir -p apk_build/lib/x86_64
-cp build/app/libmain.so apk_build/lib/x86_64/
-cp build/app/libCore.so apk_build/lib/x86_64/
+rm -rf apk/apk_build/
+mkdir -p apk/apk_build/lib/x86_64
+cp build/app/libmain.so apk/apk_build/lib/x86_64/
+cp build/app/libCore.so apk/apk_build/lib/x86_64/
 
-rm -f app-unaligned.apk app-aligned.apk
-aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F app-unaligned.apk
-cd apk_build
+aapt package -f -M AndroidManifest.xml -I "$ANDROID_JAR" -F apk/app-unaligned.apk
+cd apk/apk_build
 zip -r ../app-unaligned.apk lib/
 cd ..
 zipalign -v -f 4 app-unaligned.apk app-aligned.apk
