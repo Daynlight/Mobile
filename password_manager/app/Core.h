@@ -36,7 +36,7 @@ private:
   EGLContext m_eglContext = EGL_NO_CONTEXT;
   bool m_initialized = false;
   
-  int scene = 0;
+  int scene = 4;
 
   MA::Database database;
   std::string db_password = "";
@@ -73,6 +73,7 @@ private:
   void RenderUI();
   void RenderScene();
   void RenderGetPassword();
+  void RenderLogin();
   void RenderAddPassword();
   void RenderRemovePassword();
 

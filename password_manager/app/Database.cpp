@@ -64,6 +64,7 @@ int MA::Database::removePassword(const std::string& name) {
 };
 
 
+
 // === Hellpers
 std::string MA::Database::pbkdf2_hashing(const std::string& db_password) {
   std::string salt = "akjskdasjdaksdbzhxcbzuaiuid89u7as89d";
@@ -113,11 +114,44 @@ bool MA::Database::initializeDatabase() {
 
     char* err_msg = nullptr;
     if (sqlite3_exec(db, sql, nullptr, nullptr, &err_msg) != SQLITE_OK) {
-      LOGE("SQL error during table creation: %s", err_msg);
+      LOGE("SQL credentials  error during table creation: %s", err_msg);
       sqlite3_free(err_msg);
       sqlite3_close(db);
       return false;
     };
+  }
+
+  {
+    const char* sql = "CREATE TABLE IF NOT EXISTS access ("
+                      "id INT PRIMARY KEY, "
+                      "hashed_password TEXT NOT NULL);";
+
+    char* err_msg = nullptr;
+    if (sqlite3_exec(db, sql, nullptr, nullptr, &err_msg) != SQLITE_OK) {
+      LOGE("SQL access error during table creation: %s", err_msg);
+      sqlite3_free(err_msg);
+      sqlite3_close(db);
+      return false;
+    };
+  }
+
+  {
+    std::string hashed_password = pbkdf2_hashing("admin");
+
+    std::string sql = "INSERT OR REPLACE INTO access (hashed_password) VALUES (?);";
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+      sqlite3_close(db);
+      return false;
+    };
+
+    sqlite3_bind_text(stmt, 1, hashed_password.c_str(), -1, SQLITE_STATIC);
+
+    bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+    
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
   }
 
   LOGI("Database initialized and 'credentials' table ready.");
@@ -208,6 +242,68 @@ int MA::Database::deleteCredential(const std::string& name) {
   sqlite3_finalize(stmt);
   sqlite3_close(db);
   return success ? 0 : -4;
+};
+
+bool MA::Database::accessToDatabase(const std::string& hashed_password) {
+  sqlite3* db = nullptr;
+
+  bool founded = false;
+  std::string password = "";
+  
+  if (sqlite3_open(db_path.c_str(), &db) != SQLITE_OK) {
+    if (db) sqlite3_close(db);
+    return false;
+  };
+
+  std::string sql = "SELECT hashed_password FROM access WHERE hashed_password = ?;";
+  sqlite3_stmt* stmt = nullptr;
+
+  if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+    sqlite3_close(db);
+    return false;
+  };
+
+  sqlite3_bind_text(stmt, 1, hashed_password.c_str(), -1, SQLITE_STATIC);
+
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    const unsigned char* pwd = sqlite3_column_text(stmt, 0);
+
+    if (pwd) password = reinterpret_cast<const char*>(pwd);
+    founded = true;
+    if(password != hashed_password) founded = false;
+  };
+
+  sqlite3_finalize(stmt);
+  sqlite3_close(db);
+  return founded;
+};
+
+bool MA::Database::updateDatabaseAccessPassword(const std::string& hashed_password, const std::string& new_hashed_password) {
+  sqlite3* db = nullptr;
+
+  if(!accessToDatabase(hashed_password)) return false;
+
+  if (sqlite3_open(db_path.c_str(), &db) != SQLITE_OK) {
+    if (db) sqlite3_close(db);
+    return false;
+  };
+
+  std::string sql = "UPDATE access SET hashed_password = ? WHERE hashed_password = ?;";
+  sqlite3_stmt* stmt = nullptr;
+
+  if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+    sqlite3_close(db);
+    return false;
+  };
+
+  sqlite3_bind_text(stmt, 1, hashed_password.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 2, new_hashed_password.c_str(), -1, SQLITE_STATIC);
+
+  bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+    
+  sqlite3_finalize(stmt);
+  sqlite3_close(db);
+  return success;
 };
 
 

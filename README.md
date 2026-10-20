@@ -137,3 +137,10 @@ adb -s 127.0.0.1:5555 install -r app-aligned.apk
 adb -s 127.0.0.1:5555 shell am start -n com.ma.app/android.app.NativeActivity
 adb -s 127.0.0.1:5555 logcat -s MA_APP
 ```
+
+```bash
+adb exec-out run-as com.ma.app cat /data/data/com.ma.app/databases/vault.db > vault.db
+sqlitebrowser vault.db &
+```
+
+

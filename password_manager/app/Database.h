@@ -63,6 +63,8 @@ public:
   bool saveCredential(const std::string& name, const std::string& password, const std::string& controll);
   MA::CredentialRecord getCredential(const std::string& name); 
   int deleteCredential(const std::string& name);
+  bool accessToDatabase(const std::string& hashed_password);
+  bool updateDatabaseAccessPassword(const std::string& hashed_password, const std::string& new_hashed_password);
 
   std::vector<uint8_t> str_to_bytes(const std::string& data);
   std::string bytes_to_str(const std::vector<uint8_t>& bytes);

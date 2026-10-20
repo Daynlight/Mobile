@@ -154,8 +154,9 @@ void MA::Core::RenderUI() {
   ImGui::Begin("FullScreenOverlay", nullptr, window_flags);
     
   ImGui::PopStyleVar();
-
-  if(scene == 0) RenderScene();
+  
+  if(scene == 4) RenderLogin();
+  else if(scene == 0) RenderScene();
   else if(scene == 1) RenderGetPassword();
   else if(scene == 2) RenderAddPassword();
   else if(scene == 3) RenderRemovePassword();
@@ -184,6 +185,27 @@ void MA::Core::RenderScene() {
   if (CenteredButton("Add Password", 0.8f, btnHeight)) { scene = 2; return; };
   ImGui::Dummy(ImVec2(0, spacing)); 
   if (CenteredButton("Remove Password", 0.8f, btnHeight)) { scene = 3; return; };
+};
+
+void MA::Core::RenderLogin() {
+  password = "";
+  db_password = "";
+  name = "";
+  add_state = -1;
+  remove_state = -1;
+  memset(buffer, 0, sizeof(buffer));
+
+  float windowHeight = ImGui::GetWindowHeight() - padding;
+    
+  float btnHeight = 50.0f;
+  float spacing = 20.0f;
+  float totalHeight = (btnHeight * 2) + (spacing * 1);
+    
+  ImGui::SetCursorPosY((windowHeight - totalHeight) * 0.5f);
+
+  CenteredTextInput("Password", password);
+  ImGui::Dummy(ImVec2(0, spacing)); 
+  if (CenteredButton("Login", 0.8f, btnHeight)) { scene = 0; return; };
 };
 
 void MA::Core::RenderGetPassword(){
@@ -228,6 +250,7 @@ void MA::Core::RenderAddPassword(){
   CenteredTextInput("Password", password);
   ImGui::Dummy(ImVec2(0, spacing));
   if (CenteredButton("Add Password", 0.8f, btnHeight)) add_state = database.storePassword(db_password, name, password);
+
   if(add_state == 0){
     ImGui::Dummy(ImVec2(0, spacing));
     CenteredText("Password "+ name +" Saved");
