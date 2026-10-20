@@ -4,6 +4,7 @@ vendor/
 ndk/
 apk_build/
 emulator/
+apk/
 
 **/*.apk
 **/*.idsig
